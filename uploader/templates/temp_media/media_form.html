@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Media Form{% endblock title %}
+
+{% block content %}
+    <div class="container">
+        <h4 class="display-4 text-center mb-4">Upload Media</h4>
+        <form method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			<div class="mb-3">
+				<label for="file" class="form-label">File</label>
+				<input type="file" class="form-control" id="file" name="file">
+			</div>
+			<button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+{% endblock content %}
