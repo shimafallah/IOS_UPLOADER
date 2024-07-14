@@ -4,12 +4,66 @@
 {% block content %}
     <div class="container">
         <h4 class="display-4 text-center mb-4">Upload Media</h4>
-        <form method="post" enctype="multipart/form-data">
-			{% csrf_token %}
-			<div class="mb-3">
-				<label for="file" class="form-label">File</label>
-				<input type="file" class="form-control" id="file" name="file">
-			</div>
-			<button type="submit" class="btn btn-primary">Submit</button>
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="file" class="form-label">File</label>
+                <input type="file" class="form-control" id="file" name="file" multiple onchange="previewFiles()">
+            </div>
+            <div id="preview" class="mb-3"></div>
+            <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Submit</button>
+        </form>
+    </div>
+    <div id="success-message" class="alert alert-success" style="display:none">
+        Perfectly done
     </div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    function previewFiles() {
+        var preview = document.getElementById('preview')
+        var files = document.getElementById('file').files
+        preview.innerHTML = ''
+
+        if (files.length > 0) {
+            document.getElementById('submit-btn').removeAttribute('disabled')
+        } else {
+            document.getElementById('submit-btn').setAttribute('disabled', 'disabled')
+        }
+
+        [].forEach.call(files, readAndPreview)
+
+        function readAndPreview(file) {
+            var reader = new FileReader()
+            reader.addEventListener("load", function() {
+                var mediaElement
+                
+                if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
+                    mediaElement = document.createElement("img")
+                    mediaElement.height = 100
+                } else if (/\.(mp4|webm|ogg)$/i.test(file.name)) {
+                    mediaElement = document.createElement("video")
+                    mediaElement.height = 100
+                    mediaElement.controls = true
+                } else if (/\.(mp3|wav|ogg)$/i.test(file.name)) {
+                    mediaElement = document.createElement("audio")
+                    mediaElement.controls = true
+                } else {
+                    mediaElement = document.createElement("p")
+                    mediaElement.textContent = file.name
+                }
+
+                mediaElement.src = this.result
+                preview.appendChild(mediaElement)
+            }, false)
+
+            reader.readAsDataURL(file)
+        }
+    }
+
+    document.getElementById('upload-form').addEventListener('submit', function() {
+        document.getElementById('success-message').style.display = 'block'
+    })
+</script>
+{% endblock extra_js %}

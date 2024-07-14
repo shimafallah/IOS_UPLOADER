@@ -37,16 +37,11 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
-
-
 CORS_ALLOWED_ORIGINS = [
     'https://5121-37-156-154-131.ngrok-free.app/', 'http://localhost:8000'
 ]
 
-
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

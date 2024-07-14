@@ -21,7 +21,8 @@
 <body>
 	<a class="nav-link active" aria-current="page" href="{% url 'uploader:create_media' %}" style="font-weight: bold; color: #ffffff; background-color: #343a40; padding: 5px 10px;">Home</a>
 	<div class="jumbotron">
-	{% block content %}{% endblock content %}
+		{% block content %}{% endblock content %}
 	</div>
+	{% block extra_js %}{% endblock extra_js %}
 </body>
 </html>
