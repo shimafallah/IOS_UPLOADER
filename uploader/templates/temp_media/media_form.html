@@ -5,65 +5,82 @@
     <div class="container">
         <h4 class="display-4 text-center mb-4">Upload Media</h4>
         <form method="post" enctype="multipart/form-data" id="upload-form">
-            {% csrf_token %}
             <div class="mb-3">
                 <label for="file" class="form-label">File</label>
-                <input type="file" class="form-control" id="file" name="file" multiple onchange="previewFiles()">
+                <input type="file" class="form-control" id="file" name="file" multiple>
             </div>
-            <div id="preview" class="mb-3"></div>
-            <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Submit</button>
+        
+            <div class="progress">
+                <div id="progress" class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+           
         </form>
-    </div>
-    <div id="success-message" class="alert alert-success" style="display:none">
-        Perfectly done
     </div>
 {% endblock content %}
 
 {% block extra_js %}
 <script>
-    function previewFiles() {
-        var preview = document.getElementById('preview')
-        var files = document.getElementById('file').files
-        preview.innerHTML = ''
-
-        if (files.length > 0) {
-            document.getElementById('submit-btn').removeAttribute('disabled')
-        } else {
-            document.getElementById('submit-btn').setAttribute('disabled', 'disabled')
+    const fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', function() {
+        const files = fileInput.files;
+        for (let i = 0; i < files.length; i++) {
+            const file = {
+                file: files[i],
+                offset: 0,
+                upload_id: null,
+                progress: 0,
+                status: 0, // 0: not started, 1: uploading, 2: completed, 3: failed
+                link: null
+            }
+            uploadNextChunk(file);
         }
+    });
 
-        [].forEach.call(files, readAndPreview)
+    const uploadNextChunk = (file) => {
+    
+    file.status = 1 // uploading
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', `http://127.0.0.1:8000/uploader/`, true);
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                var totalProgress = ((file.offset + e.loaded) / file.file.size) * 100;
+                file.progress = Math.round(totalProgress)
+                document.getElementById('progress').style.width = totalProgress + '%';
+            }
+        }, false);
 
-        function readAndPreview(file) {
-            var reader = new FileReader()
-            reader.addEventListener("load", function() {
-                var mediaElement
-                
-                if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
-                    mediaElement = document.createElement("img")
-                    mediaElement.height = 100
-                } else if (/\.(mp4|webm|ogg)$/i.test(file.name)) {
-                    mediaElement = document.createElement("video")
-                    mediaElement.height = 100
-                    mediaElement.controls = true
-                } else if (/\.(mp3|wav|ogg)$/i.test(file.name)) {
-                    mediaElement = document.createElement("audio")
-                    mediaElement.controls = true
+        xhr.onload = function(e) {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                file.upload_id = response.upload_id;
+                file.offset = response.offset;
+
+                if (response.status === 'completed') {
+            file.status = 2 // upload completed
+            file.link = response.file_url
                 } else {
-                    mediaElement = document.createElement("p")
-                    mediaElement.textContent = file.name
+                    uploadNextChunk(file);
                 }
-
-                mediaElement.src = this.result
-                preview.appendChild(mediaElement)
-            }, false)
-
-            reader.readAsDataURL(file)
-        }
+            } else {
+        file.status = 3 // upload failed
+            }
+        };
+        
+        var chunk = file.file.slice(file.offset, file.offset + (1024*1024*5)); // 5MB
+        var formData = new FormData();
+        formData.append('chunk', chunk);
+        formData.append('upload_id', file.upload_id);
+        formData.append('filename', file.file.name);
+        formData.append('total_size', file.file.size);
+        xhr.send(formData);
     }
-
-    document.getElementById('upload-form').addEventListener('submit', function() {
-        document.getElementById('success-message').style.display = 'block'
-    })
+    const dataURLtoFile = (dataurl, filename) => {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, {type:mime});
+    }
 </script>
 {% endblock extra_js %}
