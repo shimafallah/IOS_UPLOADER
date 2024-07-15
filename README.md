@@ -35,7 +35,12 @@ This repository contains the implementation of an API designed to facilitate the
 	```js
 	xhr.open('POST', `http://your_ip_address:8000/uploader/`, true);
 	```
-3. **Access the Upload Form from iPhone**: On your iPhone's Safari browser, navigate to:
+3. **Running the Application on Your PC**:  To run the application on your PC, use the 		  following command:
+	 ``` 
+	 python manage.py runserver 0.0.0.0:8000
+	```
+  
+4. **Access the Upload Form from iPhone**: On your iPhone's Safari browser, navigate to:
 	```js
 	http://your_ip_address:8000
 	```
